@@ -10,6 +10,63 @@
 
 'use strict';
 
+//analytics code
+
+var express = require('express');
+var request = require('request');
+
+var app = express();
+
+var GA_TRACKING_ID = 'UA-YOUR-CODE-HERE';
+
+function trackEvent(category, action, label, value, callbback) {
+  var data = {
+    v: '1', // API Version.
+    tid: GA_TRACKING_ID, // Tracking ID / Property ID.
+    // Anonymous Client Identifier. Ideally, this should be a UUID that
+    // is associated with particular user, device, or browser instance.
+    cid: '555',
+    t: 'event', // Event hit type.
+    ec: category, // Event category.
+    ea: action, // Event action.
+    el: label, // Event label.
+    ev: value, // Event value.
+  };
+
+  request.post(
+    'http://www.google-analytics.com/collect', {
+      form: data
+    },
+    function(err, response) {
+      if (err) { return callbback(err); }
+      if (response.statusCode !== 200) {
+        return callbback(new Error('Tracking failed'));
+      }
+      callbback();
+    }
+  );
+}
+
+...
+
+//example usage in an intent handler
+"AMAZON.NoIntent": function (intent, session, response) {
+    trackEvent(
+      'Intent',
+      'AMAZON.NoIntent',
+      'na',
+      '100', // Event value must be numeric.
+      function(err) {
+        if (err) {
+            return next(err);
+        }
+        var speechOutput = "Okay.";
+        response.tell(speechOutput);
+      });
+}
+
+// end of analytics code
+
 function AlexaSkill(appId) {
     this._appId = appId;
 }
